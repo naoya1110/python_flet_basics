@@ -16,10 +16,10 @@ def main(page: ft.Page):
     # コントロール（部品）の作成
     text = ft.Text("Hello world!", size=20, color=ft.colors.BLUE_500)
     
-    # コントロールを部品に追加
+    # コントロールをpageに追加
     page.add(text)
 
-    # アプリ画面を更新    
+    # pageを更新    
     page.update()
 
 
