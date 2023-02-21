@@ -1,7 +1,7 @@
-# python_flet_basics
+# Python Flet Basics
 
 ## Introduction
 Fletを使ったチュートリアル的コード集です。
 
-## Official Doc
+## Official Document
 - https://flet.dev/docs/
