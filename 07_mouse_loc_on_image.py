@@ -1,4 +1,5 @@
 # https://flet.dev/docs/controls/image
+# https://flet.dev/docs/controls/gesturedetector
 
 import flet as ft
 import cv2
@@ -16,7 +17,8 @@ def main(page: ft.Page):
     page.window_height = 500
     page.window_width = 800
     
-    
+    IMG_SIZE= 300
+
     # numpy画像データをbase64にエンコードする関数
     def get_base64_img(img):
         _, encoded = cv2.imencode(".jpg", img)
@@ -29,7 +31,7 @@ def main(page: ft.Page):
 
         # OpenCVで画像を読み込み
         img = cv2.imread(filepath)
-        img = cv2.resize(img, dsize=None, fx=0.3, fy=0.3)
+        img = cv2.resize(img, dsize=None, fx=0.2, fy=0.2)
         img_h, img_w, _ = img.shape
         
         # image_displayのプロパティを更新
@@ -56,7 +58,8 @@ def main(page: ft.Page):
     img_blank = 255*np.ones((300, 300, 3), dtype="uint8")
     img_h, img_w, _ = img_blank.shape
     image_display = ft.Image(src_base64=get_base64_img(img_blank),
-                             width=img_w, height=img_h)
+                             width=img_w, height=img_h,
+                             fit=ft.ImageFit.CONTAIN)
     
     gd = ft.GestureDetector(
         mouse_cursor=ft.MouseCursor.MOVE,
@@ -70,7 +73,7 @@ def main(page: ft.Page):
     mouse_loc = ft.Column([ft.Row([x_loc_label, x_loc]),
                            ft.Row([y_loc_label, y_loc])])
     
-    stack = ft.Stack([image_display, gd], width=img_w, height=img_h)
+    stack = ft.Stack([image_display, gd], width=IMG_SIZE, height=IMG_SIZE)
         
     page.add(filepick_button)
     page.add(ft.Row([stack, mouse_loc]))
