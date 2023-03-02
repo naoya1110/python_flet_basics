@@ -9,7 +9,7 @@ import time
 def main(page: ft.Page):
     
     # page(アプリ画面)の設定
-    page.title = "KSB RECORDER"
+    page.title = "WEBCOM RECORDER"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = ft.colors.INDIGO_50
     page.padding = 50
@@ -17,6 +17,11 @@ def main(page: ft.Page):
     page.window_width = 800
     
     cap = cv2.VideoCapture(0)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    print("default fps", fps)
+    cap.set(cv2.CAP_PROP_FPS, 15)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    print("modified fps", fps)
 
     # numpy画像データをbase64にエンコードする関数
     def get_base64_img(img):
@@ -32,10 +37,11 @@ def main(page: ft.Page):
     image_display = ft.Image(src_base64=get_base64_img(img_blank),
                              width=img_w, height=img_h, fit=ft.ImageFit.CONTAIN)
     
-    checkbox_rec = ft.Checkbox(value=True, label="録画")
     rec_start_textfield = ft.TextField(value="17:48:00", label="録画開始時刻", width=150, height=60, text_size=20, hint_text="hh:mm:ss")
     rec_stop_textfield = ft.TextField(value="19:05:00", label="録画終了時刻", width=150, height=60, text_size=20, hint_text="hh:mm:ss")
     current_time_textfield = ft.TextField(value="00:00:00", label="現在の時刻", width=150, height=60, text_size=20)
+    fps_set_textfield = ft.TextField(value=5, label="FPS SET", width=150, height=60, text_size=20)
+    rec_status_textfield = ft.TextField(value="停止中", label="録画状況", width=150, height=60, text_size=20)
     
     rec_start = datetime.strptime(rec_start_textfield.value, "%H:%M:%S")
     rec_stop = datetime.strptime(rec_stop_textfield.value, "%H:%M:%S")
@@ -43,10 +49,11 @@ def main(page: ft.Page):
     print(rec_start)
     print(rec_stop)
     
-    control_panel = ft.Column([checkbox_rec,
-                                rec_start_textfield,
+    control_panel = ft.Column([ rec_start_textfield,
                                 rec_stop_textfield,
-                                current_time_textfield], alignment="start")
+                                current_time_textfield,
+                                fps_set_textfield,
+                                rec_status_textfield], alignment="start")
     
 
     
@@ -56,6 +63,8 @@ def main(page: ft.Page):
     
     is_recording_now = False
     is_recording_now_old = is_recording_now
+    
+    t0 = time.time()
     
     while True:
         now = datetime.now()
@@ -75,7 +84,29 @@ def main(page: ft.Page):
         else:
             is_recording_now = False
         
-        print(is_recording_now)
+        if (is_recording_now_old==False) and (is_recording_now==True):
+            # start rec
+            fps = int(fps_set_textfield.value)
+            cap.set(cv2.CAP_PROP_FPS, fps)
+            img_h, img_w, _ = img.shape
+            fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v') 
+            filename = now.strftime("%Y%m%d_%H%M%S_rec_.mp4")
+            writer = cv2.VideoWriter(filename, fourcc, fps, (img_w, img_h))
+            writer.write(img)
+            rec_status_textfield.value = "録画中"
+            page.update()
+            
+            
+        if (is_recording_now_old==True) and (is_recording_now==True):
+            # continue
+            writer.write(img) 
+        
+        if (is_recording_now_old==True) and (is_recording_now==False):
+            # stop rec
+            writer.release()
+            cap.set(cv2.CAP_PROP_FPS, 30)
+            rec_status_textfield.value="停止中"
+            page.update()
         is_recording_now_old = is_recording_now
         
         page.update()
